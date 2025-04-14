@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import openai
+import base64
 import os
 
 app = Flask(__name__)
@@ -10,18 +11,40 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
-    return "API is running"
+    return "Post Analyzer API is running"
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    fake_response = {
-        "scores": [4, 4, 5, 3, 4],
-        "feedback": [
-            {"metric": "Hook", "comment": "Strong opening, could be punchier."},
-            {"metric": "Attention", "comment": "Great layout and contrast."},
-            {"metric": "Value", "comment": "Delivers clear, actionable info."},
-            {"metric": "Interaction", "comment": "No strong CTA."},
-            {"metric": "Design", "comment": "Clean but a bit text-heavy."}
-        ]
-    }
-    return jsonify(fake_response)
+    if 'image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+
+    image_file = request.files['image']
+    image_bytes = image_file.read()
+    base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+    prompt = """
+You are a social media strategist reviewing an educational post. Rate it on these 5 metrics (0-5 scale):
+
+1. Hook: Is the post's first impression strong and scroll-stopping?
+2. Attention: Does it keep the viewer engaged visually?
+3. Value: Is the content informative, useful, or inspiring?
+4. Interaction: Is there a clear call to action or engagement element?
+5. Design: Is the design clean, modern, and well-structured?
+
+Return a JSON response in this format:
+{
+  "scores": [hook, attention, value, interaction, design],
+  "feedback": [
+    {"metric": "Hook", "comment": "..."},
+    {"metric": "Attention", "comment": "..."},
+    {"metric": "Value", "comment": "..."},
+    {"metric": "Interaction", "comment": "..."},
+    {"metric": "Design", "comment": "..."}
+  ]
+}
+"""
+
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4-vision-preview",
+
