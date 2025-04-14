@@ -44,7 +44,7 @@ Return a JSON response in this format:
 }
 """
 
-    try:
+        try:
         response = openai.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
@@ -69,6 +69,9 @@ Return a JSON response in this format:
             max_tokens=1000
         )
 
+        # NEW DEBUG LOGGING
+        print("RAW GPT RESPONSE:", response.choices[0].message.content)
+
         text = response.choices[0].message.content.strip()
         json_start = text.find("{")
         json_end = text.rfind("}") + 1
@@ -77,6 +80,7 @@ Return a JSON response in this format:
         import json
         result = json.loads(json_text)
         return jsonify(result)
+
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
