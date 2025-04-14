@@ -82,5 +82,14 @@ Return a JSON response in this format:
         return jsonify(result)
 
 
+        text = response.choices[0].message.content.strip()
+        json_start = text.find("{")
+        json_end = text.rfind("}") + 1
+        json_text = text[json_start:json_end]
+
+        import json
+        result = json.loads(json_text)
+        return jsonify(result)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
