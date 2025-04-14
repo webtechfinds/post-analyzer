@@ -3,15 +3,17 @@ from flask_cors import CORS
 import openai
 import base64
 import os
+import json
 
 app = Flask(__name__)
 CORS(app)
 
+# Load your OpenAI API key from Render env variables
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.route("/")
 def home():
-    return "Post Analyzer API is running"
+    return "Post Analyzer API is running!"
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -44,7 +46,7 @@ Return a JSON response in this format:
 }
 """
 
-        try:
+    try:
         response = openai.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
@@ -69,27 +71,18 @@ Return a JSON response in this format:
             max_tokens=1000
         )
 
-        # NEW DEBUG LOGGING
-        print("RAW GPT RESPONSE:", response.choices[0].message.content)
+        # Log the full GPT response
+        gpt_response = response.choices[0].message.content.strip()
+        print("RAW GPT RESPONSE:", gpt_response)
 
-        text = response.choices[0].message.content.strip()
-        json_start = text.find("{")
-        json_end = text.rfind("}") + 1
-        json_text = text[json_start:json_end]
+        # Try to extract JSON block from GPT response
+        json_start = gpt_response.find("{")
+        json_end = gpt_response.rfind("}") + 1
+        json_text = gpt_response[json_start:json_end]
 
-        import json
-        result = json.loads(json_text)
-        return jsonify(result)
-
-
-        text = response.choices[0].message.content.strip()
-        json_start = text.find("{")
-        json_end = text.rfind("}") + 1
-        json_text = text[json_start:json_end]
-
-        import json
         result = json.loads(json_text)
         return jsonify(result)
 
     except Exception as e:
+        print("ERROR:", str(e))
         return jsonify({"error": str(e)}), 500
