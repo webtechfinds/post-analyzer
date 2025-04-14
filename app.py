@@ -47,29 +47,30 @@ Return a JSON response in this format:
 """
 
     try:
-        response = openai.chat.completions.create(
-            model="gpt-4-vision-preview",
-            messages=[
+     response = openai.chat.completions.create(
+    model="gpt-4-turbo",  # updated model with vision support
+    messages=[
+        {
+            "role": "system",
+            "content": "You are a helpful social media strategist assistant."
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
                 {
-                    "role": "system",
-                    "content": "You are a helpful social media strategist assistant."
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}",
-                                "detail": "low"
-                            }
-                        }
-                    ]
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{base64_image}",
+                        "detail": "low"
+                    }
                 }
-            ],
-            max_tokens=1000
-        )
+            ]
+        }
+    ],
+    max_tokens=1000
+)
+
 
         # Log the full GPT response
         gpt_response = response.choices[0].message.content.strip()
