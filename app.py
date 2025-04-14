@@ -47,4 +47,36 @@ Return a JSON response in this format:
     try:
         response = openai.chat.completions.create(
             model="gpt-4-vision-preview",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful social media strategist assistant."
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "low"
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=1000
+        )
 
+        text = response.choices[0].message.content.strip()
+        json_start = text.find("{")
+        json_end = text.rfind("}") + 1
+        json_text = text[json_start:json_end]
+
+        import json
+        result = json.loads(json_text)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
